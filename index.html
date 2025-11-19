@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Pie Chart</title>
+    <link rel="stylesheet" href="src/style.css">
+</head>
+<body>
+    <div id="app">
+        <h1>Interaktives Kreisdiagramm</h1>
+        
+        <div class="container">
+            <!-- Kontrollelemente -->
+            <div class="controls">
+                <div class="control-group">
+                    <label for="colorPalette">Farbpalette wählen:</label>
+                    <div class="palette-select-wrapper">
+                        <select id="colorPalette" class="palette-select">
+                            <option value="standard">Standard (Bunt)</option>
+                            <option value="reds">Rottöne</option>
+                            <option value="oranges">Orangetöne</option>
+                            <option value="yellows">Gelbtöne</option>
+                            <option value="greens">Grüntöne</option>
+                            <option value="teals">Türkistöne</option>
+                            <option value="blues">Blautöne</option>
+                            <option value="purples">Lilatöne</option>
+                            <option value="pinks">Pinktöne</option>
+                            <option value="warm">Warme Farben</option>
+                            <option value="cool">Kalte Farben</option>
+                            <option value="pastel">Pastellfarben</option>
+                            <option value="vibrant">Kräftige Farben</option>
+                            <option value="earth">Erdtöne</option>
+                            <option value="grays">Grautöne</option>
+                        </select>
+                        <button id="applyPalette" class="btn-apply-palette" title="Palette auf alle Flächen anwenden">
+                            Anwenden
+                        </button>
+                    </div>
+                    <div id="palettePreview" class="palette-preview"></div>
+                </div>
+                
+                <div class="control-group">
+                    <label for="segmentCount">Anzahl der Flächen:</label>
+                    <input type="number" id="segmentCount" min="1" value="3">
+                </div>
+                
+                <div id="segmentsContainer" class="segments-container">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+                
+                <button id="updateChart" class="btn-update">Diagramm aktualisieren</button>
+            </div>
+            
+            <!-- SVG Kreisdiagramm -->
+            <div class="chart-container">
+                <svg id="pieChart" viewBox="-120 -120 240 240" width="400" height="400">
+                    <!-- Wird dynamisch gefüllt -->
+                </svg>
+                <div id="legend" class="legend">
+                    <!-- Wird dynamisch gefüllt -->
+                </div>
+                <div class="download-buttons">
+                    <button id="downloadSVG" class="btn-download">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                            <path d="M2 13h12v2H2z"/>
+                        </svg>
+                        Als SVG speichern
+                    </button>
+                    <button id="downloadPNG" class="btn-download">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                            <path d="M2 13h12v2H2z"/>
+                        </svg>
+                        Als PNG speichern
+                    </button>
+                    <button id="downloadJS" class="btn-download">
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                            <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                            <path d="M2 13h12v2H2z"/>
+                        </svg>
+                        Code herunterladen
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="src/main.js"></script>
+</body>
+</html>
