@@ -45,6 +45,23 @@
                     <input type="number" id="segmentCount" min="1" value="3">
                 </div>
                 
+                <div class="control-group">
+                    <label>Zwischenräume:</label>
+                    <div class="spacing-buttons">
+                        <button id="spacingColored" class="spacing-btn active">Farbig</button>
+                        <button id="spacingNone" class="spacing-btn">Keine</button>
+                    </div>
+                    <div id="spacingColorControl" class="spacing-color-control">
+                        <label for="spacingColor">Farbe:</label>
+                        <input type="color" id="spacingColor" value="#ffffff">
+                        <input type="text" id="spacingColorHex" value="#FFFFFF" placeholder="#FFFFFF">
+                    </div>
+                </div>
+                
+                <div class="control-group">
+                    <button id="resetRadius" class="btn-reset">Alle Längen zurücksetzen</button>
+                </div>
+                
                 <div id="segmentsContainer" class="segments-container">
                     <!-- Wird dynamisch gefüllt -->
                 </div>
@@ -54,13 +71,11 @@
             
             <!-- SVG Kreisdiagramm -->
             <div class="chart-container">
-                <svg id="pieChart" viewBox="-120 -120 240 240" width="400" height="400">
-                    <!-- Wird dynamisch gefüllt -->
-                </svg>
-                <div id="legend" class="legend">
-                    <!-- Wird dynamisch gefüllt -->
-                </div>
-                <div class="download-buttons">
+                <div class="chart-with-downloads">
+                    <svg id="pieChart" viewBox="-120 -120 240 240" width="400" height="400">
+                        <!-- Wird dynamisch gefüllt -->
+                    </svg>
+                    <div class="download-buttons chart-downloads">
                     <button id="downloadSVG" class="btn-download">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                             <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
@@ -68,13 +83,26 @@
                         </svg>
                         Als SVG speichern
                     </button>
-                    <button id="downloadPNG" class="btn-download">
-                        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-                            <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
-                            <path d="M2 13h12v2H2z"/>
-                        </svg>
-                        Als PNG speichern
-                    </button>
+                    <div class="png-download-wrapper">
+                        <button id="downloadPNG" class="btn-download btn-download-with-dropdown">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                                <path d="M2 13h12v2H2z"/>
+                            </svg>
+                            Als PNG speichern
+                            <span class="dropdown-arrow">▼</span>
+                        </button>
+                        <div id="pngSizeMenu" class="png-size-menu">
+                            <button class="png-size-option" data-size="400">Sehr Klein (400x400)</button>
+                            <button class="png-size-option" data-size="800">Klein (800x800)</button>
+                            <button class="png-size-option" data-size="1200">Mittel (1200x1200)</button>
+                            <button class="png-size-option" data-size="1600">Groß (1600x1600)</button>
+                            <div class="png-custom-size">
+                                <input type="number" id="customPngSize" min="400" max="8000" step="100" placeholder="Eigene Größe">
+                                <button id="downloadCustomPNG" class="btn-custom-png">OK</button>
+                            </div>
+                        </div>
+                    </div>
                     <button id="downloadJS" class="btn-download">
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
                             <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
@@ -82,6 +110,49 @@
                         </svg>
                         Code herunterladen
                     </button>
+                </div>
+                </div>
+                
+                <div class="legend-with-downloads">
+                    <div id="legend" class="legend">
+                        <!-- Wird dynamisch gefüllt -->
+                    </div>
+                    <div class="download-buttons legend-downloads">
+                        <button id="downloadLegendSVG" class="btn-download btn-download-small">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                                <path d="M2 13h12v2H2z"/>
+                            </svg>
+                            SVG
+                        </button>
+                        <div class="png-download-wrapper">
+                            <button id="downloadLegendPNG" class="btn-download btn-download-with-dropdown btn-download-small">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                    <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                                    <path d="M2 13h12v2H2z"/>
+                                </svg>
+                                PNG
+                                <span class="dropdown-arrow">▼</span>
+                            </button>
+                            <div id="legendPngSizeMenu" class="png-size-menu">
+                                <button class="legend-png-size-option" data-size="400">Sehr Klein (400px)</button>
+                                <button class="legend-png-size-option" data-size="600">Klein (600px)</button>
+                                <button class="legend-png-size-option" data-size="800">Mittel (800px)</button>
+                                <button class="legend-png-size-option" data-size="1200">Groß (1200px)</button>
+                                <div class="png-custom-size">
+                                    <input type="number" id="customLegendPngSize" min="200" max="4000" step="50" placeholder="Eigene Breite">
+                                    <button id="downloadCustomLegendPNG" class="btn-custom-png">OK</button>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="downloadLegendJS" class="btn-download btn-download-small">
+                            <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+                                <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
+                                <path d="M2 13h12v2H2z"/>
+                            </svg>
+                            Code
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

@@ -98,13 +98,16 @@ const colorPalettes = {
 };
 
 let segments = [
-    { label: 'Fläche 1', percent: 30, color: colors[0] },
-    { label: 'Fläche 2', percent: 45, color: colors[1] },
-    { label: 'Fläche 3', percent: 25, color: colors[2] }
+    { label: 'Fläche 1', percent: 30, color: colors[0], radius: 100 },
+    { label: 'Fläche 2', percent: 45, color: colors[1], radius: 100 },
+    { label: 'Fläche 3', percent: 25, color: colors[2], radius: 100 }
 ];
 
 // Tracking für deaktivierte Farben pro Palette
 let disabledColors = {};
+
+// Zwischenraum-Modus (standardmäßig farbig)
+let spacingMode = 'colored';
 
 // Initialisierung
 document.addEventListener('DOMContentLoaded', () => {
@@ -121,8 +124,87 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('segmentCount').addEventListener('input', updateSegmentInputs);
     document.getElementById('updateChart').addEventListener('click', updateChart);
     document.getElementById('downloadSVG').addEventListener('click', downloadAsSVG);
-    document.getElementById('downloadPNG').addEventListener('click', downloadAsPNG);
+    
+    // PNG-Download mit Größenauswahl
+    const pngButton = document.getElementById('downloadPNG');
+    const pngMenu = document.getElementById('pngSizeMenu');
+    
+    pngButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pngMenu.classList.toggle('show');
+    });
+    
+    // Menü schließen wenn außerhalb geklickt wird
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.png-download-wrapper')) {
+            pngMenu.classList.remove('show');
+        }
+    });
+    
+    // Vordefinierte Größen
+    document.querySelectorAll('.png-size-option').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const size = parseInt(e.target.dataset.size);
+            downloadAsPNG(size);
+            pngMenu.classList.remove('show');
+        });
+    });
+    
+    // Custom Größe
+    document.getElementById('downloadCustomPNG').addEventListener('click', () => {
+        const customSize = parseInt(document.getElementById('customPngSize').value);
+        if (customSize >= 400 && customSize <= 8000) {
+            downloadAsPNG(customSize);
+            pngMenu.classList.remove('show');
+        } else {
+            alert('Bitte geben Sie eine Größe zwischen 400 und 8000 Pixel ein.');
+        }
+    });
+    
     document.getElementById('downloadJS').addEventListener('click', downloadAsJS);
+    
+    // Legenden-Download mit Größenauswahl
+    const legendPngButton = document.getElementById('downloadLegendPNG');
+    const legendPngMenu = document.getElementById('legendPngSizeMenu');
+    
+    legendPngButton.addEventListener('click', (e) => {
+        e.stopPropagation();
+        legendPngMenu.classList.toggle('show');
+    });
+    
+    // Vordefinierte Größen für Legende
+    document.querySelectorAll('.legend-png-size-option').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const width = parseInt(e.target.dataset.size);
+            downloadLegendAsPNG(width);
+            legendPngMenu.classList.remove('show');
+        });
+    });
+    
+    // Custom Größe für Legende
+    document.getElementById('downloadCustomLegendPNG').addEventListener('click', () => {
+        const customWidth = parseInt(document.getElementById('customLegendPngSize').value);
+        if (customWidth >= 200 && customWidth <= 4000) {
+            downloadLegendAsPNG(customWidth);
+            legendPngMenu.classList.remove('show');
+        } else {
+            alert('Bitte geben Sie eine Breite zwischen 200 und 4000 Pixel ein.');
+        }
+    });
+    
+    document.getElementById('downloadLegendSVG').addEventListener('click', downloadLegendAsSVG);
+    document.getElementById('downloadLegendJS').addEventListener('click', downloadLegendAsJS);
+    
+    // Zwischenraum-Buttons
+    document.getElementById('spacingColored').addEventListener('click', () => setSpacingMode('colored'));
+    document.getElementById('spacingNone').addEventListener('click', () => setSpacingMode('none'));
+    
+    // Zwischenraum-Farbe
+    document.getElementById('spacingColor').addEventListener('input', updateSpacingColorFromPicker);
+    document.getElementById('spacingColorHex').addEventListener('input', updateSpacingColorFromHex);
+    
+    // Reset-Button für Radius
+    document.getElementById('resetRadius').addEventListener('click', resetAllRadius);
 });
 
 // Eingabefelder für Segmente erstellen
@@ -150,7 +232,8 @@ function updateSegmentInputs() {
         segments.push({
             label: `Fläche ${segments.length + 1}`,
             percent: 0,
-            color: colorsToUse[segments.length % colorsToUse.length]
+            color: colorsToUse[segments.length % colorsToUse.length],
+            radius: 100
         });
     }
     segments = segments.slice(0, count);
@@ -171,6 +254,14 @@ function updateSegmentInputs() {
             <input type="number" class="segment-percent" value="${segment.percent}" 
                    min="0" max="100" step="0.1" data-index="${index}">
             <span class="percent-symbol">%</span>
+            <button class="toggle-radius-btn" data-index="${index}" title="Länge anpassen">⚙</button>
+            <div class="radius-controls collapsed">
+                <input type="range" class="segment-radius-slider" value="${segment.radius}" 
+                       min="30" max="120" step="1" data-index="${index}">
+                <input type="number" class="segment-radius-input" value="${segment.radius}" 
+                       min="30" max="120" step="1" data-index="${index}">
+                <span class="percent-symbol">%</span>
+            </div>
         `;
         container.appendChild(segmentDiv);
         
@@ -193,6 +284,36 @@ function updateSegmentInputs() {
             if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
                 segments[index].color = value.toUpperCase();
                 colorPicker.value = value;
+                drawPieChart();
+            }
+        });
+        
+        // Event-Listener für Toggle-Button
+        const toggleBtn = segmentDiv.querySelector('.toggle-radius-btn');
+        const radiusControls = segmentDiv.querySelector('.radius-controls');
+        
+        toggleBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            radiusControls.classList.toggle('collapsed');
+            toggleBtn.classList.toggle('active');
+        });
+        
+        // Event-Listener für Radius-Änderungen
+        const radiusSlider = segmentDiv.querySelector('.segment-radius-slider');
+        const radiusInput = segmentDiv.querySelector('.segment-radius-input');
+        
+        radiusSlider.addEventListener('input', (e) => {
+            const newRadius = parseInt(e.target.value);
+            segments[index].radius = newRadius;
+            radiusInput.value = newRadius;
+            drawPieChart();
+        });
+        
+        radiusInput.addEventListener('input', (e) => {
+            const newRadius = parseInt(e.target.value);
+            if (newRadius >= 30 && newRadius <= 120) {
+                segments[index].radius = newRadius;
+                radiusSlider.value = newRadius;
                 drawPieChart();
             }
         });
@@ -225,11 +346,10 @@ function drawPieChart() {
     svg.innerHTML = '';
     
     let currentAngle = -90; // Start oben (12 Uhr Position)
-    const radius = 100;
     
     segments.forEach((segment, index) => {
         if (segment.percent > 0) {
-            const slice = createSlice(currentAngle, segment.percent, radius, segment.color);
+            const slice = createSlice(currentAngle, segment.percent, segment.radius, segment.color);
             svg.appendChild(slice);
             
             // Tooltip beim Hover
@@ -263,8 +383,16 @@ function createSlice(startAngle, percent, radius, color) {
     
     path.setAttribute('d', d);
     path.setAttribute('fill', color);
-    path.setAttribute('stroke', 'white');
-    path.setAttribute('stroke-width', '2');
+    
+    // Zwischenräume basierend auf Modus
+    if (spacingMode === 'colored') {
+        const spacingColor = document.getElementById('spacingColor').value;
+        path.setAttribute('stroke', spacingColor);
+        path.setAttribute('stroke-width', '2');
+    } else {
+        path.setAttribute('stroke', 'none');
+    }
+    
     path.classList.add('pie-slice');
     
     return path;
@@ -338,13 +466,13 @@ function downloadAsSVG() {
     URL.revokeObjectURL(url);
 }
 
-function downloadAsPNG() {
+function downloadAsPNG(size = 800) {
     const svg = document.getElementById('pieChart');
     const svgClone = svg.cloneNode(true);
     
     // SVG Dimensionen
-    const width = 800;
-    const height = 800;
+    const width = size;
+    const height = size;
     
     // SVG in String umwandeln
     const serializer = new XMLSerializer();
@@ -504,6 +632,48 @@ function updatePalettePreview() {
     }
 }
 
+// Zwischenraum-Funktionen
+function setSpacingMode(mode) {
+    spacingMode = mode;
+    
+    // Button-Styling aktualisieren
+    document.getElementById('spacingColored').classList.toggle('active', mode === 'colored');
+    document.getElementById('spacingNone').classList.toggle('active', mode === 'none');
+    
+    // Farbauswahl ein-/ausblenden
+    const colorControl = document.getElementById('spacingColorControl');
+    colorControl.style.display = mode === 'colored' ? 'flex' : 'none';
+    
+    drawPieChart();
+}
+
+function updateSpacingColorFromPicker() {
+    const color = document.getElementById('spacingColor').value.toUpperCase();
+    document.getElementById('spacingColorHex').value = color;
+    drawPieChart();
+}
+
+function updateSpacingColorFromHex() {
+    let value = document.getElementById('spacingColorHex').value;
+    if (!value.startsWith('#')) {
+        value = '#' + value;
+    }
+    if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
+        document.getElementById('spacingColor').value = value;
+        document.getElementById('spacingColorHex').value = value.toUpperCase();
+        drawPieChart();
+    }
+}
+
+// Alle Radius-Werte zurücksetzen
+function resetAllRadius() {
+    segments.forEach(segment => {
+        segment.radius = 100;
+    });
+    updateSegmentInputs();
+    drawPieChart();
+}
+
 // Farbe in Palette aktivieren/deaktivieren
 function toggleColorInPalette(paletteKey, color) {
     if (!disabledColors[paletteKey]) {
@@ -521,4 +691,137 @@ function toggleColorInPalette(paletteKey, color) {
     }
     
     updatePalettePreview();
+}
+
+// Legende als SVG herunterladen
+function downloadLegendAsSVG() {
+    const legend = document.getElementById('legend');
+    const legendClone = legend.cloneNode(true);
+    
+    // Styles inline setzen
+    const items = legendClone.querySelectorAll('.legend-item');
+    const width = 300;
+    const itemHeight = 36;
+    const headerHeight = 40;
+    const padding = 20;
+    const height = headerHeight + (items.length * itemHeight) + padding;
+    
+    // SVG erstellen
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <rect width="100%" height="100%" fill="white"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">Legende</text>`;
+    
+    let yPos = headerHeight + 10;
+    segments.forEach(segment => {
+        if (segment.percent > 0) {
+            svgContent += `
+                <rect x="20" y="${yPos}" width="20" height="20" rx="4" fill="${segment.color}"/>
+                <text x="50" y="${yPos + 15}" font-family="Arial, sans-serif" font-size="15" fill="#333">${segment.label}</text>
+                <text x="${width - 20}" y="${yPos + 15}" text-anchor="end" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#666">${segment.percent.toFixed(1)}%</text>`;
+            yPos += itemHeight;
+        }
+    });
+    
+    svgContent += '</svg>';
+    
+    const blob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'legende.svg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+}
+
+// Legende als PNG herunterladen
+function downloadLegendAsPNG(width = 600) {
+    const itemHeight = 36;
+    const headerHeight = 40;
+    const padding = 20;
+    const visibleSegments = segments.filter(s => s.percent > 0);
+    const height = headerHeight + (visibleSegments.length * itemHeight) + padding;
+    
+    // SVG für Legende erstellen
+    let svgContent = `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}">
+        <rect width="100%" height="100%" fill="white"/>
+        <text x="20" y="30" font-family="Arial, sans-serif" font-size="18" font-weight="bold" fill="#333">Legende</text>`;
+    
+    let yPos = headerHeight + 10;
+    visibleSegments.forEach(segment => {
+        svgContent += `
+            <rect x="20" y="${yPos}" width="20" height="20" rx="4" fill="${segment.color}"/>
+            <text x="50" y="${yPos + 15}" font-family="Arial, sans-serif" font-size="15" fill="#333">${segment.label}</text>
+            <text x="${width - 20}" y="${yPos + 15}" text-anchor="end" font-family="Arial, sans-serif" font-size="14" font-weight="600" fill="#666">${segment.percent.toFixed(1)}%</text>`;
+        yPos += itemHeight;
+    });
+    
+    svgContent += '</svg>';
+    
+    // Canvas erstellen
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext('2d');
+    
+    // Image aus SVG erstellen
+    const img = new Image();
+    const svgBlob = new Blob([svgContent], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(svgBlob);
+    
+    img.onload = function() {
+        ctx.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(url);
+        
+        // PNG als Download
+        canvas.toBlob(function(blob) {
+            const pngUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = pngUrl;
+            link.download = 'legende.png';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(pngUrl);
+        }, 'image/png');
+    };
+    
+    img.onerror = function(error) {
+        console.error('Fehler beim Laden des SVG:', error);
+        alert('PNG-Download fehlgeschlagen. Bitte versuchen Sie es erneut.');
+        URL.revokeObjectURL(url);
+    };
+    
+    img.src = url;
+}
+
+// Legenden-Daten als JavaScript herunterladen
+function downloadLegendAsJS() {
+    const legendData = segments
+        .filter(s => s.percent > 0)
+        .map(segment => ({
+            label: segment.label,
+            percent: segment.percent,
+            color: segment.color
+        }));
+    
+    const jsContent = `// Legenden-Daten
+const legendData = ${JSON.stringify(legendData, null, 4)};
+
+// Beispiel-Nutzung:
+legendData.forEach(item => {
+    console.log(\`\${item.label}: \${item.percent}% (\${item.color})\`);
+});
+`;
+    
+    const blob = new Blob([jsContent], { type: 'application/javascript' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'legende-daten.js';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
 }
