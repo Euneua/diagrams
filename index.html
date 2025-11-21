@@ -18,6 +18,7 @@
                     <div class="palette-select-wrapper">
                         <select id="colorPalette" class="palette-select">
                             <option value="standard">Standard (Bunt)</option>
+                            <option value="monochrome">Gleichfarbig</option>
                             <option value="reds">Rottöne</option>
                             <option value="oranges">Orangetöne</option>
                             <option value="yellows">Gelbtöne</option>
@@ -33,11 +34,23 @@
                             <option value="earth">Erdtöne</option>
                             <option value="grays">Grautöne</option>
                         </select>
-                        <button id="applyPalette" class="btn-apply-palette" title="Palette auf alle Flächen anwenden">
-                            Anwenden
-                        </button>
                     </div>
+                    
+                    <!-- Monochrome Farbauswahl -->
+                    <div id="monochromeColorControl" class="monochrome-color-control" style="display: none;">
+                        <label>Farbe wählen:</label>
+                        <input type="color" id="monochromeColor" value="#667eea">
+                        <input type="text" id="monochromeColorHex" value="#667EEA" placeholder="#667EEA">
+                    </div>
+                    
+                    <!-- Palette Preview (für bunte Paletten) oder Standard-Farben-Auswahl -->
                     <div id="palettePreview" class="palette-preview"></div>
+                    <div id="standardColorsControl" class="standard-colors-control" style="display: none;">
+                        <div class="standard-colors-grid" id="standardColorsGrid">
+                            <!-- Wird dynamisch gefüllt -->
+                        </div>
+                        <button id="addCustomColor" class="btn-add-color">+ Eigene Farbe</button>
+                    </div>
                 </div>
                 
                 <div class="control-group">
@@ -65,12 +78,22 @@
                 <div id="segmentsContainer" class="segments-container">
                     <!-- Wird dynamisch gefüllt -->
                 </div>
-                
-                <button id="updateChart" class="btn-update">Diagramm aktualisieren</button>
             </div>
             
             <!-- SVG Kreisdiagramm -->
             <div class="chart-container">
+                <!-- Diagramm-Typ Auswahl -->
+                <div class="diagram-type-selector">
+                    <label for="diagramType">Diagramm-Typ:</label>
+                    <select id="diagramType" class="diagram-type-select">
+                        <option value="pie">Kreisdiagramm</option>
+                        <option value="bar" disabled>Balkendiagramm (Coming Soon)</option>
+                        <option value="line" disabled>Liniendiagramm (Coming Soon)</option>
+                        <option value="donut" disabled>Ringdiagramm (Coming Soon)</option>
+                        <option value="area" disabled>Flächendiagramm (Coming Soon)</option>
+                    </select>
+                </div>
+                
                 <div class="chart-with-downloads">
                     <svg id="pieChart" viewBox="-120 -120 240 240" width="400" height="400">
                         <!-- Wird dynamisch gefüllt -->
@@ -114,9 +137,22 @@
                 </div>
                 
                 <div class="legend-with-downloads">
+                    <div class="legend-format-controls">
+                        <label>Anzeige:</label>
+                        <div class="legend-format-buttons">
+                            <button id="legendFormatInteger" class="legend-format-btn">Ohne Nachkommastellen</button>
+                            <button id="legendFormatDecimal" class="legend-format-btn legend-format-with-input active">
+                                <span>Mit Nachkommastellen</span>
+                                <input type="number" id="legendDecimalPlaces" class="decimal-places-input" 
+                                       min="0" max="10" placeholder="Auto" title="Anzahl Nachkommastellen (leer = automatisch)">
+                            </button>
+                        </div>
+                    </div>
+                    
                     <div id="legend" class="legend">
                         <!-- Wird dynamisch gefüllt -->
                     </div>
+                    
                     <div class="download-buttons legend-downloads">
                         <button id="downloadLegendSVG" class="btn-download btn-download-small">
                             <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
