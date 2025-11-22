@@ -113,7 +113,7 @@ let disabledColors = {};
 // Monochrome Farbeinstellungen
 let monochromeColor = '#667eea';
 let standardColors = [...colors]; // Kopie der 25 Standardfarben
-let selectedStandardColor = null; // Für Standard-Farben-Auswahl
+let selectedStandardColor = colors[0]; // Erste Farbe standardmäßig ausgewählt
 
 // Zwischenraum-Modus (standardmäßig farbig)
 let spacingMode = 'colored';
@@ -287,8 +287,15 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('spacingColor').addEventListener('input', updateSpacingColorFromPicker);
     document.getElementById('spacingColorHex').addEventListener('input', updateSpacingColorFromHex);
     
+    // Zwischenraum-Dicke
+    document.getElementById('spacingWidth').addEventListener('input', updateSpacingWidthFromSlider);
+    document.getElementById('spacingWidthValue').addEventListener('input', updateSpacingWidthFromInput);
+    
     // Reset-Button für Radius
     document.getElementById('resetRadius').addEventListener('click', resetAllRadius);
+    
+    // Farbpipette
+    document.getElementById('colorPickerBtn').addEventListener('click', activateColorPicker);
 });
 
 // Eingabefelder für Segmente erstellen
@@ -485,8 +492,9 @@ function createSlice(startAngle, percent, radius, color) {
     // Zwischenräume basierend auf Modus
     if (spacingMode === 'colored') {
         const spacingColor = document.getElementById('spacingColor').value;
+        const spacingWidth = document.getElementById('spacingWidth').value;
         path.setAttribute('stroke', spacingColor);
-        path.setAttribute('stroke-width', '2');
+        path.setAttribute('stroke-width', spacingWidth);
     } else {
         path.setAttribute('stroke', 'none');
     }
@@ -677,13 +685,8 @@ function applyColorPalette() {
     const paletteKey = document.getElementById('colorPalette').value;
     const palette = colorPalettes[paletteKey];
     
-    if (paletteKey === 'monochrome') {
-        // Wende die ausgewählte Monochrome-Farbe auf alle Segmente an
-        segments.forEach(segment => {
-            segment.color = monochromeColor;
-        });
-    } else if (paletteKey === 'standard' && selectedStandardColor) {
-        // Wende die ausgewählte Standard-Farbe auf alle Segmente an
+    if (paletteKey === 'monochrome' && selectedStandardColor) {
+        // Wende die ausgewählte Farbe auf alle Segmente an (Monochrome/Einfarbig)
         segments.forEach(segment => {
             segment.color = selectedStandardColor;
         });
@@ -721,41 +724,13 @@ function updatePalettePreview() {
     standardColorsControl.style.display = 'none';
     
     if (paletteKey === 'monochrome') {
-        // Zeige Monochrome Farbauswahl
-        monochromeControl.style.display = 'flex';
-        
-        // Event-Listener für Monochrome Farbpicker
-        const colorPicker = document.getElementById('monochromeColor');
-        const hexInput = document.getElementById('monochromeColorHex');
-        
-        // Synchronisiere Color Picker und Hex Input
-        colorPicker.value = monochromeColor;
-        hexInput.value = monochromeColor.toUpperCase();
-        
-        colorPicker.oninput = () => {
-            monochromeColor = colorPicker.value;
-            hexInput.value = monochromeColor.toUpperCase();
-            // Automatisch anwenden
-            applyColorPalette();
-        };
-        
-        hexInput.oninput = () => {
-            const hex = hexInput.value.trim();
-            if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
-                monochromeColor = hex.toLowerCase();
-                colorPicker.value = monochromeColor;
-                // Automatisch anwenden
-                applyColorPalette();
-            }
-        };
-        
-    } else if (paletteKey === 'standard') {
-        // Zeige Standard-Farben-Auswahl
+        // Zeige Standard-Farben-Auswahl für Monochrome
         standardColorsControl.style.display = 'block';
         updateStandardColorsGrid();
         
+        
     } else {
-        // Zeige normale Palette Preview (mit deaktivieren)
+        // Zeige normale Palette Preview (mit deaktivieren) - auch für Standard (Bunt)
         preview.style.display = 'flex';
         preview.innerHTML = '';
         
@@ -799,16 +774,12 @@ function updatePalettePreview() {
             addColorBtn.className = 'btn-add-color';
             addColorBtn.textContent = '+ Eigene Farbe';
             addColorBtn.onclick = () => {
-                const newColor = prompt('Geben Sie eine Farbe als Hex-Code ein (z.B. #FF5733):');
-                if (newColor && /^#[0-9A-Fa-f]{6}$/.test(newColor)) {
-                    const hexColor = newColor.toLowerCase();
-                    if (!palette.colors.includes(hexColor)) {
-                        palette.colors.push(hexColor);
+                showAddColorDialog((newColor) => {
+                    if (!palette.colors.includes(newColor.toLowerCase())) {
+                        palette.colors.push(newColor.toLowerCase());
                         updatePalettePreview();
                     }
-                } else if (newColor) {
-                    alert('Ungültiger Hex-Code. Bitte verwenden Sie das Format #RRGGBB');
-                }
+                });
             };
             preview.appendChild(addColorBtn);
         }
@@ -842,14 +813,82 @@ function updateStandardColorsGrid() {
     // Event-Listener für "Eigene Farbe hinzufügen"
     const addBtn = document.getElementById('addCustomColor');
     addBtn.onclick = () => {
-        const newColor = prompt('Geben Sie eine Farbe als Hex-Code ein (z.B. #FF5733):');
-        if (newColor && /^#[0-9A-Fa-f]{6}$/.test(newColor)) {
+        showAddColorDialog((newColor) => {
             if (!standardColors.includes(newColor.toLowerCase())) {
                 standardColors.push(newColor.toLowerCase());
                 updateStandardColorsGrid();
             }
-        } else if (newColor) {
+        });
+    };
+}
+
+// Dialog zum Hinzufügen einer Farbe (Color Picker oder Hex-Code)
+function showAddColorDialog(callback) {
+    // Erstelle Dialog-Overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'color-dialog-overlay';
+    
+    const dialog = document.createElement('div');
+    dialog.className = 'color-dialog';
+    
+    dialog.innerHTML = `
+        <h3>Farbe hinzufügen</h3>
+        <div class="color-dialog-content">
+            <div class="color-input-group">
+                <label>Farbauswahl:</label>
+                <input type="color" id="dialogColorPicker" value="#667eea">
+            </div>
+            <div class="color-input-group">
+                <label>Hex-Code:</label>
+                <input type="text" id="dialogHexInput" value="#667EEA" placeholder="#667EEA">
+            </div>
+        </div>
+        <div class="color-dialog-buttons">
+            <button id="dialogCancel" class="btn-dialog btn-cancel">Abbrechen</button>
+            <button id="dialogConfirm" class="btn-dialog btn-confirm">Hinzufügen</button>
+        </div>
+    `;
+    
+    overlay.appendChild(dialog);
+    document.body.appendChild(overlay);
+    
+    const colorPicker = dialog.querySelector('#dialogColorPicker');
+    const hexInput = dialog.querySelector('#dialogHexInput');
+    const confirmBtn = dialog.querySelector('#dialogConfirm');
+    const cancelBtn = dialog.querySelector('#dialogCancel');
+    
+    // Synchronisiere Color Picker und Hex Input
+    colorPicker.oninput = () => {
+        hexInput.value = colorPicker.value.toUpperCase();
+    };
+    
+    hexInput.oninput = () => {
+        const hex = hexInput.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            colorPicker.value = hex.toLowerCase();
+        }
+    };
+    
+    // Bestätigen
+    confirmBtn.onclick = () => {
+        const hex = hexInput.value.trim();
+        if (/^#[0-9A-Fa-f]{6}$/.test(hex)) {
+            callback(hex.toLowerCase());
+            document.body.removeChild(overlay);
+        } else {
             alert('Ungültiger Hex-Code. Bitte verwenden Sie das Format #RRGGBB');
+        }
+    };
+    
+    // Abbrechen
+    cancelBtn.onclick = () => {
+        document.body.removeChild(overlay);
+    };
+    
+    // Schließen bei Klick auf Overlay
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            document.body.removeChild(overlay);
         }
     };
 }
@@ -898,6 +937,20 @@ function updateSpacingColorFromHex() {
     if (/^#[0-9A-Fa-f]{6}$/.test(value)) {
         document.getElementById('spacingColor').value = value;
         document.getElementById('spacingColorHex').value = value.toUpperCase();
+        drawPieChart();
+    }
+}
+
+function updateSpacingWidthFromSlider() {
+    const width = document.getElementById('spacingWidth').value;
+    document.getElementById('spacingWidthValue').value = width;
+    drawPieChart();
+}
+
+function updateSpacingWidthFromInput() {
+    const width = parseFloat(document.getElementById('spacingWidthValue').value);
+    if (!isNaN(width) && width >= 0.5 && width <= 10) {
+        document.getElementById('spacingWidth').value = width;
         drawPieChart();
     }
 }
@@ -1078,4 +1131,196 @@ legendData.forEach(item => {
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+}
+
+// Farbpipette aktivieren
+let colorPickerActive = false;
+let colorPickerCursor = null;
+
+function activateColorPicker() {
+    if (colorPickerActive) return;
+    
+    colorPickerActive = true;
+    document.body.classList.add('color-picker-active');
+    
+    // Erstelle runden Cursor
+    colorPickerCursor = document.createElement('div');
+    colorPickerCursor.className = 'color-picker-cursor';
+    document.body.appendChild(colorPickerCursor);
+    
+    const preview = document.getElementById('colorPickerPreview');
+    preview.style.display = 'flex';
+    
+    // Mousemove zum Anzeigen der Vorschau und Bewegen des Cursors
+    document.addEventListener('mousemove', handleColorPickerMove);
+    document.addEventListener('click', handleColorPickerClick);
+    
+    // ESC zum Abbrechen
+    document.addEventListener('keydown', handleColorPickerEscape);
+}
+
+function handleColorPickerMove(e) {
+    if (!colorPickerActive) return;
+    
+    // Bewege den runden Cursor
+    if (colorPickerCursor) {
+        colorPickerCursor.style.left = e.clientX + 'px';
+        colorPickerCursor.style.top = e.clientY + 'px';
+    }
+    
+    // Hole die Farbe unter dem Cursor
+    const color = getColorAtPosition(e.clientX, e.clientY);
+    if (color) {
+        updateColorPreview(color);
+        // Färbe den Cursor mit der aktuellen Farbe
+        if (colorPickerCursor) {
+            colorPickerCursor.style.backgroundColor = color.hex;
+        }
+    }
+}
+
+function handleColorPickerClick(e) {
+    if (!colorPickerActive) return;
+    
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const color = getColorAtPosition(e.clientX, e.clientY);
+    if (color) {
+        // Zeige die ausgewählte Farbe an
+        const display = document.getElementById('pickedColorDisplay');
+        display.style.display = 'flex';
+        
+        document.getElementById('pickedColorBox').style.backgroundColor = color.hex;
+        document.getElementById('pickedColorHex').textContent = color.hex.toUpperCase();
+        document.getElementById('pickedColorRgb').textContent = color.rgb;
+    }
+    
+    deactivateColorPicker();
+}
+
+function handleColorPickerEscape(e) {
+    if (e.key === 'Escape') {
+        deactivateColorPicker();
+    }
+}
+
+function deactivateColorPicker() {
+    colorPickerActive = false;
+    document.body.classList.remove('color-picker-active');
+    
+    // Entferne runden Cursor
+    if (colorPickerCursor) {
+        document.body.removeChild(colorPickerCursor);
+        colorPickerCursor = null;
+    }
+    
+    const preview = document.getElementById('colorPickerPreview');
+    preview.style.display = 'none';
+    
+    document.removeEventListener('mousemove', handleColorPickerMove);
+    document.removeEventListener('click', handleColorPickerClick);
+    document.removeEventListener('keydown', handleColorPickerEscape);
+}
+
+function getColorAtPosition(x, y) {
+    // Erstelle temporäres Canvas
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = 1;
+    canvas.height = 1;
+    
+    // Zeichne den Bereich unter dem Cursor
+    try {
+        // Da wir nicht direkt Pixel vom Bildschirm lesen können,
+        // müssen wir das Element unter dem Cursor finden
+        const element = document.elementFromPoint(x, y);
+        if (!element) return null;
+        
+        const computedStyle = window.getComputedStyle(element);
+        let color = computedStyle.backgroundColor;
+        
+        // Wenn transparent, versuche parent
+        if (color === 'rgba(0, 0, 0, 0)' || color === 'transparent') {
+            let parent = element.parentElement;
+            while (parent && (computedStyle.backgroundColor === 'rgba(0, 0, 0, 0)' || computedStyle.backgroundColor === 'transparent')) {
+                color = window.getComputedStyle(parent).backgroundColor;
+                parent = parent.parentElement;
+            }
+        }
+        
+        return parseColor(color);
+    } catch (e) {
+        return null;
+    }
+}
+
+function parseColor(colorString) {
+    // Parse RGB/RGBA
+    const rgbMatch = colorString.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (rgbMatch) {
+        const r = parseInt(rgbMatch[1]);
+        const g = parseInt(rgbMatch[2]);
+        const b = parseInt(rgbMatch[3]);
+        
+        const hex = '#' + [r, g, b].map(x => {
+            const h = x.toString(16);
+            return h.length === 1 ? '0' + h : h;
+        }).join('');
+        
+        return {
+            hex: hex,
+            rgb: `rgb(${r}, ${g}, ${b})`,
+            r: r,
+            g: g,
+            b: b,
+            name: getColorName(r, g, b)
+        };
+    }
+    
+    return null;
+}
+
+function getColorName(r, g, b) {
+    // Einfache Farbzuordnung
+    const colors = [
+        { name: 'Schwarz', r: 0, g: 0, b: 0 },
+        { name: 'Weiß', r: 255, g: 255, b: 255 },
+        { name: 'Rot', r: 255, g: 0, b: 0 },
+        { name: 'Grün', r: 0, g: 255, b: 0 },
+        { name: 'Blau', r: 0, g: 0, b: 255 },
+        { name: 'Gelb', r: 255, g: 255, b: 0 },
+        { name: 'Cyan', r: 0, g: 255, b: 255 },
+        { name: 'Magenta', r: 255, g: 0, b: 255 },
+        { name: 'Orange', r: 255, g: 165, b: 0 },
+        { name: 'Lila', r: 128, g: 0, b: 128 },
+        { name: 'Rosa', r: 255, g: 192, b: 203 },
+        { name: 'Braun', r: 165, g: 42, b: 42 },
+        { name: 'Grau', r: 128, g: 128, b: 128 }
+    ];
+    
+    let closestColor = colors[0];
+    let minDistance = Infinity;
+    
+    colors.forEach(color => {
+        const distance = Math.sqrt(
+            Math.pow(r - color.r, 2) +
+            Math.pow(g - color.g, 2) +
+            Math.pow(b - color.b, 2)
+        );
+        
+        if (distance < minDistance) {
+            minDistance = distance;
+            closestColor = color;
+        }
+    });
+    
+    return closestColor.name;
+}
+
+function updateColorPreview(color) {
+    document.getElementById('colorPreviewBox').style.backgroundColor = color.hex;
+    document.getElementById('colorName').textContent = color.name;
+    document.getElementById('colorHex').textContent = color.hex.toUpperCase();
+    document.getElementById('colorRgb').textContent = color.rgb;
 }

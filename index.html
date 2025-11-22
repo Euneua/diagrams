@@ -65,9 +65,16 @@
                         <button id="spacingNone" class="spacing-btn">Keine</button>
                     </div>
                     <div id="spacingColorControl" class="spacing-color-control">
-                        <label for="spacingColor">Farbe:</label>
-                        <input type="color" id="spacingColor" value="#ffffff">
-                        <input type="text" id="spacingColorHex" value="#FFFFFF" placeholder="#FFFFFF">
+                        <div class="spacing-color-group">
+                            <label for="spacingColor">Farbe:</label>
+                            <input type="color" id="spacingColor" value="#ffffff">
+                            <input type="text" id="spacingColorHex" value="#FFFFFF" placeholder="#FFFFFF">
+                        </div>
+                        <div class="spacing-width-group">
+                            <label for="spacingWidth">Dicke:</label>
+                            <input type="range" id="spacingWidth" min="0.5" max="10" step="0.5" value="2">
+                            <input type="number" id="spacingWidthValue" min="0.5" max="10" step="0.5" value="2" class="spacing-width-input">
+                        </div>
                     </div>
                 </div>
                 
@@ -104,7 +111,7 @@
                             <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
                             <path d="M2 13h12v2H2z"/>
                         </svg>
-                        Als SVG speichern
+                        SVG
                     </button>
                     <div class="png-download-wrapper">
                         <button id="downloadPNG" class="btn-download btn-download-with-dropdown">
@@ -112,7 +119,7 @@
                                 <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
                                 <path d="M2 13h12v2H2z"/>
                             </svg>
-                            Als PNG speichern
+                            PNG
                             <span class="dropdown-arrow">▼</span>
                         </button>
                         <div id="pngSizeMenu" class="png-size-menu">
@@ -131,7 +138,7 @@
                             <path d="M8 12l-4-4h3V4h2v4h3l-4 4z"/>
                             <path d="M2 13h12v2H2z"/>
                         </svg>
-                        Code herunterladen
+                        Code
                     </button>
                 </div>
                 </div>

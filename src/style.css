@@ -222,6 +222,7 @@ h1 {
 }
 
 .btn-add-color {
+    width: 100%;
     padding: 8px 16px;
     background: rgba(102, 126, 234, 0.2);
     border: 1px solid #667eea;
@@ -361,16 +362,31 @@ h1 {
 }
 
 .spacing-color-control {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-top: 12px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.5);
+    border-radius: 8px;
+}
+
+.spacing-color-group,
+.spacing-width-group {
     display: flex;
     align-items: center;
-    gap: 10px;
-    margin-top: 12px;
+    gap: 8px;
+    flex-wrap: nowrap;
 }
 
 .spacing-color-control label {
     font-weight: 500;
     font-size: 0.9rem;
     min-width: 50px;
+}
+
+.spacing-width-group label {
+    min-width: 20px;
 }
 
 .spacing-color-control input[type="color"] {
@@ -384,11 +400,27 @@ h1 {
 .spacing-color-control input[type="text"] {
     width: 90px;
     padding: 8px 10px;
-    border: 1px solid #e0e0e0;
+    border: 2px solid #e0e0e0;
     border-radius: 6px;
     font-size: 0.85rem;
     font-family: 'Courier New', monospace;
     text-transform: uppercase;
+}
+
+.spacing-color-control input[type="range"] {
+    flex: 1;
+    min-width: 100px;
+    cursor: pointer;
+    accent-color: #667eea;
+}
+
+.spacing-width-input {
+    width: 70px;
+    padding: 6px 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 6px;
+    font-size: 0.85rem;
+    text-align: center;
 }
 
 .spacing-color-control input:focus {
@@ -429,13 +461,13 @@ h1 {
 
 .segment-input {
     display: grid;
-    grid-template-columns: 110px 1fr 120px 40px;
+    grid-template-columns: auto 1fr auto auto;
     grid-template-areas: "color label percent toggle";
     gap: 10px;
-    align-items: start;
+    align-items: center;
     background: white;
-    padding: 10px;
-    border-radius: 6px;
+    padding: 12px;
+    border-radius: 8px;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     position: relative;
 }
@@ -458,15 +490,15 @@ h1 {
 
 .color-controls {
     display: flex;
-    gap: 6px;
+    gap: 8px;
     align-items: center;
 }
 
 .color-picker {
-    width: 40px;
-    height: 40px;
+    width: 45px;
+    height: 45px;
     border: 2px solid #e0e0e0;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
     transition: border-color 0.2s;
 }
@@ -476,13 +508,14 @@ h1 {
 }
 
 .color-hex {
-    width: 70px;
-    padding: 8px 6px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 0.75rem;
+    width: 75px;
+    padding: 10px 8px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.8rem;
     font-family: 'Courier New', monospace;
     text-transform: uppercase;
+    text-align: center;
 }
 
 .color-hex:focus {
@@ -499,18 +532,20 @@ h1 {
 }
 
 .segment-label {
-    padding: 8px 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
+    min-width: 150px;
 }
 
 .segment-percent {
-    padding: 8px 12px;
-    border: 1px solid #e0e0e0;
-    border-radius: 6px;
-    font-size: 0.9rem;
+    padding: 10px 14px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 0.95rem;
     text-align: right;
+    width: 120px;
 }
 
 .segment-label:focus,
@@ -525,17 +560,18 @@ h1 {
 }
 
 .toggle-radius-btn {
-    width: 36px;
-    height: 36px;
+    width: 42px;
+    height: 42px;
     border: 2px solid #e0e0e0;
     background: white;
-    border-radius: 6px;
+    border-radius: 8px;
     cursor: pointer;
-    font-size: 1.1rem;
+    font-size: 1.2rem;
     transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
+    flex-shrink: 0;
 }
 
 .toggle-radius-btn:hover {
@@ -681,6 +717,23 @@ h1 {
     width: 100%;
 }
 
+.chart-downloads .btn-download {
+    flex: 1;
+    min-width: 80px;
+    padding: 10px 12px;
+    font-size: 0.8rem;
+    height: 42px;
+}
+
+.chart-downloads .download-buttons {
+    gap: 8px;
+}
+
+.chart-downloads .png-download-wrapper {
+    flex: 1;
+    min-width: 80px;
+}
+
 .legend-with-downloads {
     display: flex;
     flex-direction: column;
@@ -817,6 +870,7 @@ h1 {
     min-width: 80px;
     padding: 10px 12px;
     font-size: 0.8rem;
+    height: 42px;
 }
 
 .legend-downloads {
@@ -938,6 +992,116 @@ h1 {
     background: #5568d3;
 }
 
+/* Color Dialog */
+.color-dialog-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.color-dialog {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    min-width: 400px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.color-dialog h3 {
+    margin: 0 0 20px 0;
+    color: #2d3748;
+    font-size: 1.3rem;
+}
+
+.color-dialog-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.color-input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.color-input-group label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #4a5568;
+}
+
+.color-input-group input[type="color"] {
+    width: 100%;
+    height: 50px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+.color-input-group input[type="text"] {
+    width: 100%;
+    padding: 10px 12px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-family: 'Courier New', monospace;
+    text-transform: uppercase;
+}
+
+.color-input-group input:focus {
+    outline: none;
+    border-color: #667eea;
+}
+
+.color-dialog-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: flex-end;
+}
+
+.btn-dialog {
+    padding: 10px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-cancel {
+    background: #e2e8f0;
+    color: #4a5568;
+}
+
+.btn-cancel:hover {
+    background: #cbd5e0;
+}
+
+.btn-confirm {
+    background: #667eea;
+    color: white;
+}
+
+.btn-confirm:hover {
+    background: #5568d3;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.btn-confirm:active {
+    transform: translateY(0);
+}
+
 /* Responsive Design */
 @media (max-width: 1200px) {
     .container {
@@ -950,5 +1114,10 @@ h1 {
     
     h1 {
         font-size: 1.5rem;
+    }
+    
+    .color-dialog {
+        min-width: 320px;
+        margin: 20px;
     }
 }
